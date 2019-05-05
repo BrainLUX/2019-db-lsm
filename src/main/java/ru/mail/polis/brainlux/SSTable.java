@@ -41,7 +41,11 @@ public final class SSTable implements Table {
         final ByteBuffer cellBuffer = mapped.duplicate();
         cellBuffer.limit(offsetBuffer.position());
         this.cells = cellBuffer.slice();
+    }
 
+    @Override
+    public long sizeInBytes() {
+        return 0;
     }
 
     public static void write(Iterator<Cell> cells, File to) throws IOException {

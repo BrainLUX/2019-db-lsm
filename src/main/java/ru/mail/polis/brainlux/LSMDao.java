@@ -25,13 +25,15 @@ public final class LSMDao implements DAO {
     public static final String SUFFIX = ".dat";
     public static final String TEMP = ".tmp";
 
-    private final File base;
+    private Table memTable;
     private final long flushThreshold;
-    private MemTable memTable;
-    private final Collection<Path> files;
+    private final File base;
     private int generation;
+    private final Collection<Path> files;
 
-    public LSMDao(final File base, final long flushThreshold) throws IOException {
+    public LSMDao(
+            final File base,
+            final long flushThreshold) throws IOException {
         this.base = base;
         assert flushThreshold >= 0L;
         this.flushThreshold = flushThreshold;
@@ -44,16 +46,17 @@ public final class LSMDao implements DAO {
     @NotNull
     @Override
     public Iterator<Record> iterator(@NotNull ByteBuffer from) throws IOException {
-        final ArrayList<Iterator<Cell>> files = new ArrayList<>();
+        final ArrayList<Iterator<Cell>> filesIterators = new ArrayList<>();
 
         //SSTables iterators
         for (final Path path : this.files) {
-            files.add(new SSTable(path.toFile()).iterator(from));
+            filesIterators.add(new SSTable(path.toFile()).iterator(from));
         }
 
         //MemTable iterator
-        files.add(memTable.iterator(from));
-        final Iterator<Cell> cells = Iters.collapseEquals(Iterators.mergeSorted(files, Cell.COMPARATOR), Cell::getKey);
+        filesIterators.add(memTable.iterator(from));
+        final Iterator<Cell> cells = Iters.collapseEquals(Iterators.mergeSorted(filesIterators, Cell.COMPARATOR)
+                , Cell::getKey);
         final Iterator<Cell> alive =
                 Iterators.filter(
                         cells,
@@ -72,7 +75,7 @@ public final class LSMDao implements DAO {
     @Override
     public void upsert(@NotNull ByteBuffer key, @NotNull ByteBuffer value) throws IOException {
         memTable.upsert(key, value);
-        if (memTable.sizeInBytes() > flushThreshold) {
+        if (memTable.sizeInBytes() >= flushThreshold) {
             flush();
         }
     }
@@ -88,8 +91,11 @@ public final class LSMDao implements DAO {
     }
 
     @Override
-    public void remove(@NotNull ByteBuffer key) {
+    public void remove(@NotNull ByteBuffer key) throws IOException {
         memTable.remove(key);
+        if (memTable.sizeInBytes() >= flushThreshold) {
+            flush();
+        }
     }
 
     @Override

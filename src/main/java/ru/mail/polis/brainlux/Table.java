@@ -7,6 +7,9 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 
 public interface Table {
+
+    long sizeInBytes();
+
     @NotNull
     Iterator<Cell> iterator(@NotNull ByteBuffer from) throws IOException;
 

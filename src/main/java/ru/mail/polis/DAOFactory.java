@@ -17,10 +17,11 @@
 package ru.mail.polis;
 
 import org.jetbrains.annotations.NotNull;
-import ru.mail.polis.brainlux.LSMDao;
 
 import java.io.File;
 import java.io.IOException;
+
+import ru.mail.polis.brainlux.LSMDao;
 
 /**
  * Custom {@link DAO} factory.
@@ -54,6 +55,6 @@ public final class DAOFactory {
             throw new IllegalArgumentException("Path is not a directory: " + data);
         }
 
-        return new LSMDao(data, MAX_HEAP / 4);
+        return new LSMDao(data, MAX_HEAP / 24);
     }
 }
