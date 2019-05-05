@@ -9,6 +9,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Iterators;
@@ -44,13 +45,15 @@ public final class LSMDao implements DAO {
         this.flushThreshold = flushThreshold;
         memTable = new MemTable();
         ssTables = new ArrayList<>();
-        Stream stream = Files.walk(base.toPath(), 1).filter(path -> path.getFileName().toString().endsWith(SUFFIX));
-        stream.forEach(path -> {
-            try {
-                ssTables.add(new SSTable(((Path) path).toFile()));
-            } catch (IOException ignored) {
+        try (Stream<Path> walk = Files.walk(base.toPath(), 1)) {
+            Collection<Path> result = walk.filter(path -> path.getFileName().toString().endsWith(SUFFIX))
+                    .collect(Collectors.toList());
+            for (Path path : result) {
+                ssTables.add(new SSTable(path.toFile()));
             }
-        });
+        } catch (IOException ignored) {
+        }
+
     }
 
     @NotNull
