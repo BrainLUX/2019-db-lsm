@@ -4,10 +4,12 @@ import com.google.common.collect.Iterators;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Iterator;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public final class MemTable implements Table {
-    private SortedMap<ByteBuffer, Value> map = new TreeMap<>();
+    private final SortedMap<ByteBuffer, Value> map = new TreeMap<>();
     private long sizeInBytes;
 
     public long sizeInBytes() {
@@ -16,7 +18,7 @@ public final class MemTable implements Table {
 
     @NotNull
     @Override
-    public Iterator<Cell> iterator(@NotNull ByteBuffer from) {
+    public Iterator<Cell> iterator(@NotNull final ByteBuffer from) {
         return Iterators.transform(
                 map.tailMap(from).entrySet().iterator(),
                 e -> {
@@ -26,7 +28,7 @@ public final class MemTable implements Table {
     }
 
     @Override
-    public void upsert(@NotNull ByteBuffer key, @NotNull ByteBuffer value) {
+    public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
         final Value previous = map.put(key, Value.of(value));
         if (previous == null) {
             sizeInBytes += key.remaining() + value.remaining();
@@ -38,7 +40,7 @@ public final class MemTable implements Table {
     }
 
     @Override
-    public void remove(@NotNull ByteBuffer key) {
+    public void remove(@NotNull final ByteBuffer key) {
         final Value previous = map.put(key, Value.tombstone());
         if (previous == null) {
             sizeInBytes += key.remaining();

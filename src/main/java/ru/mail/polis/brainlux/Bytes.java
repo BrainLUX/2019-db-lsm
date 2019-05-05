@@ -2,8 +2,8 @@ package ru.mail.polis.brainlux;
 
 import java.nio.ByteBuffer;
 
-public final class Bytes {
-    public Bytes() {
+final class Bytes {
+    private Bytes() {
     }
 
     static ByteBuffer fromInt(final int value) {

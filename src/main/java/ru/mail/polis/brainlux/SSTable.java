@@ -12,14 +12,13 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 
 public final class SSTable implements Table {
     private final int rows;
     private final IntBuffer offsets;
     private final ByteBuffer cells;
 
-    SSTable(File file) throws IOException {
+    SSTable(final File file) throws IOException {
         final long fileSize = file.length();
         final ByteBuffer mapped;
         try (
@@ -48,7 +47,7 @@ public final class SSTable implements Table {
         return 0;
     }
 
-    public static void write(Iterator<Cell> cells, File to) throws IOException {
+    static void write(final Iterator<Cell> cells, final File to) throws IOException {
         try (FileChannel fc = FileChannel.open(to.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
             final List<Integer> offsets = new ArrayList<>();
             int offset = 0;
@@ -155,7 +154,7 @@ public final class SSTable implements Table {
 
     @NotNull
     @Override
-    public Iterator<Cell> iterator(@NotNull ByteBuffer from) {
+    public Iterator<Cell> iterator(@NotNull final ByteBuffer from) {
         return new Iterator<>() {
             int next = position(from);
 
@@ -173,12 +172,12 @@ public final class SSTable implements Table {
     }
 
     @Override
-    public void upsert(@NotNull ByteBuffer key, @NotNull ByteBuffer value) {
+    public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
         throw new UnsupportedOperationException("");
     }
 
     @Override
-    public void remove(@NotNull ByteBuffer key) {
+    public void remove(@NotNull final ByteBuffer key) {
         throw new UnsupportedOperationException("");
     }
 

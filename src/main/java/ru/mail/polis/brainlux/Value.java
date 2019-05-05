@@ -9,8 +9,8 @@ public final class Value implements Comparable<Value> {
     private final long ts;
     private final ByteBuffer data;
 
-    public Value(final long ts, final ByteBuffer data) {
-        assert (ts >= 0);
+
+    Value(final long ts, final ByteBuffer data) {
         this.ts = ts;
         this.data = data;
     }
@@ -19,15 +19,15 @@ public final class Value implements Comparable<Value> {
         return new Value(System.currentTimeMillis(), data.duplicate());
     }
 
-    public static Value tombstone() {
+    static Value tombstone() {
         return new Value(System.currentTimeMillis(), null);
     }
 
-    public boolean isRemoved() {
+    boolean isRemoved() {
         return data == null;
     }
 
-    public ByteBuffer getData() {
+    ByteBuffer getData() {
         if (data == null) {
             throw new IllegalArgumentException("");
         }
@@ -35,11 +35,11 @@ public final class Value implements Comparable<Value> {
     }
 
     @Override
-    public int compareTo(@NotNull Value o) {
+    public int compareTo(@NotNull final Value o) {
         return -Long.compare(ts, o.ts);
     }
 
-    public long getTimeStamp() {
+    long getTimeStamp() {
         return ts;
     }
 }

@@ -5,13 +5,13 @@ import java.util.Comparator;
 
 public final class Cell {
 
-    public static final Comparator<Cell> COMPARATOR =
+    static final Comparator<Cell> COMPARATOR =
             Comparator.comparing(Cell::getKey).thenComparing(Cell::getValue);
 
     private final ByteBuffer key;
     private final Value value;
 
-    Cell(ByteBuffer key, Value value) {
+    Cell(final ByteBuffer key, final Value value) {
         this.key = key;
         this.value = value;
     }
