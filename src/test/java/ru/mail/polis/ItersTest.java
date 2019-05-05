@@ -8,7 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
- * @author Dmitry Schitinin <dmitry.schitinin@corp.mail.ru>
+ * Unit tests for {@link Iters} facilities.
+ *
+ * @author Dmitry Schitinin
  */
 class ItersTest {
     @Test

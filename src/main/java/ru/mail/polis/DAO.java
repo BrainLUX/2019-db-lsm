@@ -26,14 +26,28 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * Storage interface
+ * Storage interface.
  *
- * @author Vadim Tsesko <incubos@yandex.com>
+ * @author Vadim Tsesko
+ * @author Dmitry Schitinin
  */
 public interface DAO extends Closeable {
+
+    /**
+     * Provides iterator (possibly empty) over {@link Record}s starting at "from" key (inclusive)
+     * in <b>ascending</b> order according to {@link Record#compareTo(Record)}.
+     * N.B. The iterator should be obtained as fast as possible, e.g.
+     * one should not "seek" to start point ("from" element) in linear time ;)
+     */
     @NotNull
     Iterator<Record> iterator(@NotNull ByteBuffer from) throws IOException;
 
+    /**
+     * Provides iterator (possibly empty) over {@link Record}s starting at "from" key (inclusive)
+     * until given "to" key (exclusive) in <b>ascending</b> order according to {@link Record#compareTo(Record)}.
+     * N.B. The iterator should be obtained as fast as possible, e.g.
+     * one should not "seek" to start point ("from" element) in linear time ;)
+     */
     @NotNull
     default Iterator<Record> range(
             @NotNull ByteBuffer from,
@@ -49,9 +63,14 @@ public interface DAO extends Closeable {
         final Record bound = new Record(to, ByteBuffer.allocate(0));
         return Iters.until(iterator(from), bound);
     }
-    
+
+    /**
+     * Obtains {@link Record} corresponding to given key.
+     *
+     * @throws NoSuchElementException if no such record
+     */
     @NotNull
-    default ByteBuffer get(@NotNull ByteBuffer key) throws IOException {
+    default ByteBuffer get(@NotNull ByteBuffer key) throws IOException, NoSuchElementException {
         final Iterator<Record> iter = iterator(key);
         if (!iter.hasNext()) {
             throw new NoSuchElementException("Not found");
@@ -65,13 +84,15 @@ public interface DAO extends Closeable {
         }
     }
 
+    /**
+     * Inserts or updates value by given key.
+     */
     void upsert(
             @NotNull ByteBuffer key,
             @NotNull ByteBuffer value) throws IOException;
 
+    /**
+     * Removes value by given key.
+     */
     void remove(@NotNull ByteBuffer key) throws IOException;
-
-    default void compact() throws IOException {
-        // Implement me when you get to stage 3
-    }
 }

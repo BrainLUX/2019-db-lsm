@@ -8,9 +8,9 @@ import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 /**
- * Utility methods for iterators
+ * Utility methods for iterators.
  *
- * @author Dmitry Schitinin <dmitry.schitinin@corp.mail.ru>
+ * @author Dmitry Schitinin
  */
 public final class Iters {
 
@@ -35,8 +35,20 @@ public final class Iters {
         return (Iterator<E>) EMPTY;
     }
 
-    public static <E extends Comparable<E>> Iterator<E> until(@NotNull Iterator<E> iter, @NotNull E until) {
+    public static <E extends Comparable<E>> Iterator<E> until(
+            @NotNull final Iterator<E> iter,
+            @NotNull final E until) {
         return new UntilIterator<>(iter, until);
+    }
+
+    public static <E> Iterator<E> collapseEquals(
+            @NotNull final Iterator<E> iter,
+            @NotNull final Function<E, ?> byKey) {
+        return new CollapseEqualsIterator<>(iter, byKey);
+    }
+
+    public static <E> Iterator<E> collapseEquals(@NotNull final Iterator<E> iter) {
+        return new CollapseEqualsIterator<>(iter);
     }
 
     private static class UntilIterator<E extends Comparable<E>> implements Iterator<E> {
@@ -45,7 +57,9 @@ public final class Iters {
 
         private E next;
 
-        UntilIterator(@NotNull Iterator<E> iter, @NotNull E until) {
+        UntilIterator(
+                @NotNull final Iterator<E> iter,
+                @NotNull final E until) {
             this.iter = iter;
             this.until = until;
             this.next = iter.hasNext() ? iter.next() : null;
@@ -66,30 +80,21 @@ public final class Iters {
         }
     }
 
-    public static <E> Iterator<E> collapseEquals(@NotNull Iterator<E> iter,
-                                                 @NotNull Function<E, ?> byKey) {
-        return new CollapseEqualsIterator<>(iter, byKey);
-    }
-
-    public static <E> Iterator<E> collapseEquals(@NotNull Iterator<E> iter) {
-        return new CollapseEqualsIterator<>(iter);
-    }
-
     private static class CollapseEqualsIterator<E> implements Iterator<E> {
-
         private final Iterator<E> iter;
         private final Function<E, ?> keyExtractor;
 
         private E next;
 
-        CollapseEqualsIterator(@NotNull Iterator<E> iter,
-                               @NotNull Function<E, ?> keyExtractor) {
+        CollapseEqualsIterator(
+                @NotNull final Iterator<E> iter,
+                @NotNull final Function<E, ?> keyExtractor) {
             this.iter = iter;
             this.keyExtractor = keyExtractor;
             this.next = iter.hasNext() ? iter.next() : null;
         }
 
-        CollapseEqualsIterator(@NotNull Iterator<E> iter) {
+        CollapseEqualsIterator(@NotNull final Iterator<E> iter) {
             this(iter, Functions.identity());
         }
 
@@ -107,10 +112,10 @@ public final class Iters {
             // Advance to the next distinct key
             this.next = null;
             while (iter.hasNext()) {
-                final E next = iter.next();
-                if (!keyExtractor.apply(next)
+                final E key = iter.next();
+                if (!keyExtractor.apply(key)
                         .equals(keyExtractor.apply(result))) {
-                    this.next = next;
+                    this.next = key;
                     break;
                 }
             }

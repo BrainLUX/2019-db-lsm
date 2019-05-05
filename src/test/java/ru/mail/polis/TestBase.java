@@ -22,9 +22,9 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Contains utility methods for unit tests
+ * Contains utility methods for unit tests.
  *
- * @author Vadim Tsesko <incubos@yandex.com>
+ * @author incubos
  */
 abstract class TestBase {
     static final int KEY_LENGTH = 16;

@@ -8,22 +8,23 @@ import java.util.Objects;
 /**
  * Record from {@link DAO}.
  *
- * @author Dmitry Schitinin <dmitry.schitinin@corp.mail.ru>
+ * @author Dmitry Schitinin
  */
 public class Record implements Comparable<Record> {
-
-    public static Record of(@NotNull ByteBuffer key,
-                            @NotNull ByteBuffer value) {
-        return new Record(key, value);
-    }
-
     private final ByteBuffer key;
     private final ByteBuffer value;
 
-    Record(@NotNull ByteBuffer key,
-           @NotNull ByteBuffer value) {
+    Record(
+            @NotNull final ByteBuffer key,
+            @NotNull final ByteBuffer value) {
         this.key = key;
         this.value = value;
+    }
+
+    public static Record of(
+            @NotNull final ByteBuffer key,
+            @NotNull final ByteBuffer value) {
+        return new Record(key, value);
     }
 
     public ByteBuffer getKey() {
@@ -35,12 +36,12 @@ public class Record implements Comparable<Record> {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Record record = (Record) o;
-        return Objects.equals(key, record.key) &&
-                Objects.equals(value, record.value);
+        final Record record = (Record) o;
+        return Objects.equals(key, record.key)
+                && Objects.equals(value, record.value);
     }
 
     @Override
@@ -49,7 +50,7 @@ public class Record implements Comparable<Record> {
     }
 
     @Override
-    public int compareTo(@NotNull Record other) {
+    public int compareTo(@NotNull final Record other) {
         return this.key.compareTo(other.key);
     }
 }

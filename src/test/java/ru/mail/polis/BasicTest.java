@@ -32,9 +32,9 @@ import java.util.TreeMap;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Functional unit tests for {@link DAO} implementations
+ * Functional unit tests for {@link DAO} implementations.
  *
- * @author Vadim Tsesko <incubos@yandex.com>
+ * @author Vadim Tsesko
  */
 class BasicTest extends TestBase {
     @Test

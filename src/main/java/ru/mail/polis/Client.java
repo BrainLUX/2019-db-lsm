@@ -16,6 +16,10 @@
 
 package ru.mail.polis;
 
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -25,36 +29,51 @@ import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 
 /**
- * Simple console client to {@link DAO}
+ * Simple console client to {@link DAO}.
  *
- * @author Vadim Tsesko <incubos@yandex.com>
+ * @author Vadim Tsesko
  */
-public class Client {
+public final class Client {
+    private static final Logger log = LoggerFactory.getLogger(Client.class);
     private static final String DATA = "data";
 
-    public static void main(String[] args) throws IOException {
+    private Client() {
+        // Not instantiable
+    }
+
+    @NotNull
+    private static ByteBuffer from(@NotNull final String value) {
+        return ByteBuffer.wrap(value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @NotNull
+    private static String from(@NotNull final ByteBuffer value) {
+        final byte[] bytes = new byte[value.remaining()];
+        value.get(bytes);
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
+    public static void main(final String[] args) throws IOException {
         final File data = new File(DATA);
-        if (!data.exists()) {
-            if (!data.mkdir()) {
-                throw new IOException("Can't create directory: " + data);
-            }
+        if (!data.exists() && !data.mkdir()) {
+            throw new IOException("Can't create directory: " + data);
         }
         if (!data.isDirectory()) {
             throw new IOException("Not directory: " + data);
         }
 
+        log.info("Storing data in {}", data.getAbsolutePath());
         final DAO dao = DAOFactory.create(data);
         final String pkg = dao.getClass().getPackage().toString();
-        System.out.println(
-                "Welcome to " + pkg.substring(pkg.lastIndexOf(".") + 1) + " Key-Value DAO!"
-                        + "\nStoring data in directory " + DATA
+        log.info(
+                "Welcome to " + pkg.substring(pkg.lastIndexOf('.') + 1) + " Key-Value DAO!"
                         + "\nSupported commands:"
                         + "\n\tget <key>"
                         + "\n\tput <key> <value>"
                         + "\n\tremove <key>"
                         + "\n\tquit");
 
-        try (final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             String line;
             while (!"quit".equals(line = reader.readLine())) {
                 if (line.isEmpty()) {
@@ -68,18 +87,16 @@ public class Client {
                 switch (cmd) {
                     case "get":
                         try {
-                            final ByteBuffer value = dao.iterator(key).next().getValue();
-                            final byte[] bytes = new byte[value.remaining()];
-                            value.get(bytes);
-                            System.out.println(new String(bytes));
+                            log.info(from(dao.get(key)));
                         } catch (NoSuchElementException e) {
-                            System.err.println("absent");
+                            log.warn("absent");
+                        } catch (IOException e) {
+                            log.error("Can't extract key: " + key, e);
                         }
                         break;
 
                     case "put":
-                        final ByteBuffer value = ByteBuffer.wrap(tokens[2].getBytes(StandardCharsets.UTF_8));
-                        dao.upsert(key, value);
+                        dao.upsert(key, from(tokens[2]));
                         break;
 
                     case "remove":
@@ -87,7 +104,8 @@ public class Client {
                         break;
 
                     default:
-                        System.err.println("Unsupported command: " + cmd);
+                        log.error("Unsupported command: {}", cmd);
+                        break; // For PMD
                 }
             }
         }

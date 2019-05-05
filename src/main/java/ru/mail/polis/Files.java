@@ -27,9 +27,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Utility methods for handling files
+ * Utility methods for handling files.
  *
- * @author Vadim Tsesko <incubos@yandex.com>
+ * @author Vadim Tsesko
  */
 final class Files {
     private Files() {
@@ -40,24 +40,20 @@ final class Files {
         java.nio.file.Files.walkFileTree(
                 path.toPath(),
                 new SimpleFileVisitor<>() {
-                    private void remove(@NotNull final Path file) throws IOException {
-                        if (!file.toFile().delete()) {
-                            throw new IOException("Can't delete " + file);
-                        }
-                    }
-
                     @NotNull
                     @Override
                     public FileVisitResult visitFile(
                             @NotNull final Path file,
                             @NotNull final BasicFileAttributes attrs) throws IOException {
-                        remove(file);
+                        java.nio.file.Files.delete(file);
                         return FileVisitResult.CONTINUE;
                     }
 
                     @Override
-                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                        remove(dir);
+                    public FileVisitResult postVisitDirectory(
+                            final Path dir,
+                            final IOException exc) throws IOException {
+                        java.nio.file.Files.delete(dir);
                         return FileVisitResult.CONTINUE;
                     }
                 });
