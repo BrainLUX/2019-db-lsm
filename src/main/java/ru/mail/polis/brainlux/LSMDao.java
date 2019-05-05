@@ -4,10 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Iterators;
 import org.jetbrains.annotations.NotNull;
@@ -42,13 +45,15 @@ public final class LSMDao implements DAO {
         this.flushThreshold = flushThreshold;
         memTable = new MemTable();
         ssTables = new ArrayList<>();
-        Files.walk(base.toPath(), 1).filter(path -> path.getFileName().toString().endsWith(SUFFIX))
-                .forEach(path -> {
-                    try {
-                        ssTables.add(new SSTable(path.toFile()));
-                    } catch (IOException ignored) {
-                    }
-                });
+        try (Stream walkingStream = Files.walk(base.toPath(), 1).filter(path -> path.getFileName().toString().endsWith(SUFFIX))) {
+            walkingStream.forEach(path -> {
+                try {
+                    ssTables.add(new SSTable(((Path) path).toFile()));
+                } catch (IOException ignored) {
+                    //Ignored
+                }
+            });
+        }
     }
 
     @NotNull
@@ -63,8 +68,8 @@ public final class LSMDao implements DAO {
 
         //MemTable iterator
         filesIterators.add(memTable.iterator(from));
-        final Iterator<Cell> cells = Iters.collapseEquals(Iterators.mergeSorted(filesIterators, Cell.COMPARATOR)
-                , Cell::getKey);
+        final Iterator<Cell> cells = Iters.collapseEquals(Iterators.mergeSorted(filesIterators, Cell.COMPARATOR),
+                Cell::getKey);
         final Iterator<Cell> alive =
                 Iterators.filter(
                         cells,
