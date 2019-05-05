@@ -47,7 +47,6 @@ public final class LSMDao implements DAO {
                     try {
                         ssTables.add(new SSTable(path.toFile()));
                     } catch (IOException ignored) {
-                        //Ignored
                     }
                 });
     }
@@ -64,8 +63,8 @@ public final class LSMDao implements DAO {
 
         //MemTable iterator
         filesIterators.add(memTable.iterator(from));
-        final Iterator<Cell> cells = Iters.collapseEquals(Iterators.mergeSorted(filesIterators, Cell.COMPARATOR),
-                Cell::getKey);
+        final Iterator<Cell> cells = Iters.collapseEquals(Iterators.mergeSorted(filesIterators, Cell.COMPARATOR)
+                , Cell::getKey);
         final Iterator<Cell> alive =
                 Iterators.filter(
                         cells,
