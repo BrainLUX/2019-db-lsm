@@ -25,7 +25,7 @@ public final class SSTable implements Table {
         try (
                 FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
             assert fileSize <= Integer.MAX_VALUE;
-            mapped = fc.map(FileChannel.MapMode.READ_ONLY, 0L, fileSize).order(ByteOrder.BIG_ENDIAN);
+            mapped = fc.map(FileChannel.MapMode.READ_ONLY, 0L, fc.size()).order(ByteOrder.BIG_ENDIAN);
         }
 
         //Rows
@@ -118,7 +118,6 @@ public final class SSTable implements Table {
         //Timestamp
         final long timestamp = cells.getLong(offset);
         offset += Long.BYTES;
-
         if (timestamp < 0) {
             return new Cell(key.slice(), new Value(-timestamp, null));
         } else {
@@ -148,11 +147,6 @@ public final class SSTable implements Table {
             }
         }
         return left;
-    }
-
-    @Override
-    public long sizeInBytes() {
-        return 0;
     }
 
     @NotNull

@@ -25,9 +25,9 @@ public final class LSMDao implements DAO {
     public static final String SUFFIX = ".dat";
     public static final String TEMP = ".tmp";
 
-    private Table memTable;
-    private final long flushThreshold;
     private final File base;
+    private final long flushThreshold;
+    private MemTable memTable;
     private final Collection<Path> files;
     private int generation;
 
@@ -88,7 +88,7 @@ public final class LSMDao implements DAO {
     }
 
     @Override
-    public void remove(@NotNull ByteBuffer key) throws IOException {
+    public void remove(@NotNull ByteBuffer key) {
         memTable.remove(key);
     }
 
