@@ -3,14 +3,11 @@ package ru.mail.polis.brainlux;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.Iterators;
 import org.jetbrains.annotations.NotNull;
@@ -45,15 +42,13 @@ public final class LSMDao implements DAO {
         this.flushThreshold = flushThreshold;
         memTable = new MemTable();
         ssTables = new ArrayList<>();
-        try (Stream<Path> walk = Files.walk(base.toPath(), 1)) {
-            Collection<Path> result = walk.filter(path -> path.getFileName().toString().endsWith(SUFFIX))
-                    .collect(Collectors.toList());
-            for (Path path : result) {
+        Files.walkFileTree(base.toPath(), new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(final Path path, final BasicFileAttributes attrs) throws IOException {
                 ssTables.add(new SSTable(path.toFile()));
+                return FileVisitResult.CONTINUE;
             }
-        } catch (IOException ignored) {
-        }
-
+        });
     }
 
     @NotNull
