@@ -65,7 +65,7 @@ public final class LSMDao implements DAO {
             filesIterators.add(ssTable.iterator(from));
         }
 
-        //MemTable iterator 
+        //MemTable iterator
         filesIterators.add(memTable.iterator(from));
         final Iterator<Cell> cells = Iters.collapseEquals(Iterators.mergeSorted(filesIterators, Cell.COMPARATOR),
                 Cell::getKey);
