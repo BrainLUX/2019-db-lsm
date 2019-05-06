@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Contains utility methods for unit tests.
  *
- * @author incubos
+ * @author Vadim Tsesko
  */
 abstract class TestBase {
     static final int KEY_LENGTH = 16;

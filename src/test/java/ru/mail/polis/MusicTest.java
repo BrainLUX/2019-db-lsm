@@ -105,26 +105,26 @@ class MusicTest extends TestBase {
     @Test
     void database(@TempDir File data) throws IOException {
         // Fill music database
-        DAO dao = DAOFactory.create(data);
-        dao.upsert(trackFrom("Ar1", "Al11", "T111"), randomValue());
-        dao.upsert(trackFrom("Ar1", "Al11", "T112"), randomValue());
-        dao.upsert(trackFrom("Ar1", "Al12", "T111"), randomValue());
-        dao.upsert(trackFrom("Ar1", "Al12", "T112"), randomValue());
-        dao.upsert(trackFrom("Ar1", "Al12", "T113"), randomValue());
-        dao.upsert(trackFrom("Ar2", "Al21", "T211"), randomValue());
-        dao.upsert(trackFrom("Ar2", "Al21", "T212"), randomValue());
-        dao.close();
+        try (DAO dao = DAOFactory.create(data)) {
+            dao.upsert(trackFrom("Ar1", "Al11", "T111"), randomValue());
+            dao.upsert(trackFrom("Ar1", "Al11", "T112"), randomValue());
+            dao.upsert(trackFrom("Ar1", "Al12", "T111"), randomValue());
+            dao.upsert(trackFrom("Ar1", "Al12", "T112"), randomValue());
+            dao.upsert(trackFrom("Ar1", "Al12", "T113"), randomValue());
+            dao.upsert(trackFrom("Ar2", "Al21", "T211"), randomValue());
+            dao.upsert(trackFrom("Ar2", "Al21", "T212"), randomValue());
+        }
 
         // Open music database
-        dao = DAOFactory.create(data);
+        try (DAO dao = DAOFactory.create(data)) {
+            // Artists
+            assertEquals(5, Iterators.size(dao.range(artistFrom("Ar1"), next(artistFrom("Ar1")))));
+            assertEquals(2, Iterators.size(dao.range(artistFrom("Ar2"), next(artistFrom("Ar2")))));
 
-        // Artists
-        assertEquals(5, Iterators.size(dao.range(artistFrom("Ar1"), next(artistFrom("Ar1")))));
-        assertEquals(2, Iterators.size(dao.range(artistFrom("Ar2"), next(artistFrom("Ar2")))));
-
-        // Albums
-        assertEquals(2, Iterators.size(dao.range(albumFrom("Ar1", "Al11"), next(albumFrom("Ar1", "Al11")))));
-        assertEquals(3, Iterators.size(dao.range(albumFrom("Ar1", "Al12"), next(albumFrom("Ar1", "Al12")))));
-        assertEquals(2, Iterators.size(dao.range(albumFrom("Ar2", "Al21"), next(albumFrom("Ar2", "Al21")))));
+            // Albums
+            assertEquals(2, Iterators.size(dao.range(albumFrom("Ar1", "Al11"), next(albumFrom("Ar1", "Al11")))));
+            assertEquals(3, Iterators.size(dao.range(albumFrom("Ar1", "Al12"), next(albumFrom("Ar1", "Al12")))));
+            assertEquals(2, Iterators.size(dao.range(albumFrom("Ar2", "Al21"), next(albumFrom("Ar2", "Al21")))));
+        }
     }
 }
