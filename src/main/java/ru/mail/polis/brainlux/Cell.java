@@ -16,7 +16,7 @@ public final class Cell {
     }
 
     public ByteBuffer getKey() {
-        return key;
+        return key.asReadOnlyBuffer();
     }
 
     public Value getValue() {

@@ -29,7 +29,7 @@ public final class Value implements Comparable<Value> {
         if (data == null) {
             throw new IllegalArgumentException("Cell data is null");
         }
-        return data;
+        return data.duplicate().slice();
     }
 
     @Override
