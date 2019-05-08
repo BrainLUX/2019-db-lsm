@@ -40,7 +40,6 @@ public final class SSTable implements Table {
         final ByteBuffer cellBuffer = mapped.duplicate();
         cellBuffer.limit(offsetBuffer.position());
         this.cells = cellBuffer.slice();
-
     }
 
     @Override

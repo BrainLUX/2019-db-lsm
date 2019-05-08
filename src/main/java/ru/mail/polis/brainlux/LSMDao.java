@@ -80,16 +80,10 @@ public final class LSMDao implements DAO {
         final Iterator<Cell> alive =
                 Iterators.filter(
                         cells,
-                        cell -> {
-                            assert cell != null;
-                            return !cell.getValue().isRemoved();
-                        });
+                        cell -> !cell.getValue().isRemoved());
         return Iterators.transform(
                 alive,
-                cell -> {
-                    assert cell != null;
-                    return Record.of(cell.getKey(), cell.getValue().getData());
-                });
+                cell -> Record.of(cell.getKey(), cell.getValue().getData()));
     }
 
     @Override
@@ -99,7 +93,6 @@ public final class LSMDao implements DAO {
             flush();
         }
     }
-
 
     private void flush() throws IOException {
         final File tmp = new File(base, PREFIX + generation + TEMP);
@@ -122,4 +115,5 @@ public final class LSMDao implements DAO {
     public void close() throws IOException {
         flush();
     }
+
 }

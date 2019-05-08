@@ -21,10 +21,7 @@ public final class MemTable implements Table {
     public Iterator<Cell> iterator(@NotNull final ByteBuffer from) {
         return Iterators.transform(
                 map.tailMap(from).entrySet().iterator(),
-                e -> {
-                    assert e != null;
-                    return new Cell(e.getKey(), e.getValue());
-                });
+                e -> new Cell(e.getKey(), e.getValue()));
     }
 
     @Override
