@@ -211,8 +211,9 @@ class PersistenceTest extends TestBase {
 
                 dao.upsert(key, value);
 
-                // store the latest value by key
-                if (i % sampleCount == 0) {
+                // store the latest value by key or update previously stored one
+                if (i % sampleCount == 0 ||
+                        samples.containsKey(keyPayload)) {
                     samples.put(keyPayload, valuePayload);
                 }
             }
