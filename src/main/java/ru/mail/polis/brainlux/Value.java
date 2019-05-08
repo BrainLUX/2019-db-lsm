@@ -5,10 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.ByteBuffer;
 
 public final class Value implements Comparable<Value> {
-
     private final long ts;
     private final ByteBuffer data;
-
 
     Value(final long ts, final ByteBuffer data) {
         this.ts = ts;
@@ -16,11 +14,11 @@ public final class Value implements Comparable<Value> {
     }
 
     public static Value of(final ByteBuffer data) {
-        return new Value(System.currentTimeMillis(), data.duplicate());
+        return new Value(TimeUtils.getTimeNanos(), data.duplicate());
     }
 
     static Value tombstone() {
-        return new Value(System.currentTimeMillis(), null);
+        return new Value(TimeUtils.getTimeNanos(), null);
     }
 
     boolean isRemoved() {
@@ -29,9 +27,9 @@ public final class Value implements Comparable<Value> {
 
     ByteBuffer getData() {
         if (data == null) {
-            throw new IllegalArgumentException("");
+            throw new IllegalArgumentException("Cell data is null");
         }
-        return data.asReadOnlyBuffer();
+        return data;
     }
 
     @Override
@@ -42,4 +40,5 @@ public final class Value implements Comparable<Value> {
     long getTimeStamp() {
         return ts;
     }
+
 }

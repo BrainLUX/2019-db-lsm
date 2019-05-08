@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.Comparator;
 
 public final class Cell {
-
     static final Comparator<Cell> COMPARATOR =
             Comparator.comparing(Cell::getKey).thenComparing(Cell::getValue);
 
@@ -17,10 +16,11 @@ public final class Cell {
     }
 
     public ByteBuffer getKey() {
-        return key.asReadOnlyBuffer();
+        return key;
     }
 
     public Value getValue() {
         return value;
     }
+
 }

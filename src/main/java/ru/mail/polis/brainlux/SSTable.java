@@ -17,18 +17,19 @@ public final class SSTable implements Table {
     private final int rows;
     private final IntBuffer offsets;
     private final ByteBuffer cells;
+    private final long sizeInBytes;
 
     SSTable(final File file) throws IOException {
-        final long fileSize = file.length();
+        this.sizeInBytes = file.length();
+        assert sizeInBytes != 0 && sizeInBytes <= Integer.MAX_VALUE;
         final ByteBuffer mapped;
-        try (
-                FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
-            assert fileSize <= Integer.MAX_VALUE;
+        try (FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
+            assert sizeInBytes <= Integer.MAX_VALUE;
             mapped = fc.map(FileChannel.MapMode.READ_ONLY, 0L, fc.size()).order(ByteOrder.BIG_ENDIAN);
         }
 
         //Rows
-        rows = mapped.getInt((int) (fileSize - Integer.BYTES));
+        rows = mapped.getInt((int) (sizeInBytes - Integer.BYTES));
 
         // Offset
         final ByteBuffer offsetBuffer = mapped.duplicate();
@@ -40,12 +41,21 @@ public final class SSTable implements Table {
         final ByteBuffer cellBuffer = mapped.duplicate();
         cellBuffer.limit(offsetBuffer.position());
         this.cells = cellBuffer.slice();
+
     }
 
     @Override
     public long sizeInBytes() {
-        return 0;
+        return sizeInBytes;
     }
+
+    /**
+     * Writes MemTable data to disk
+     *
+     * @param cells iterator of MemTable
+     * @param to    path of the file where data needs to be written
+     * @throws IOException if an I/O error occurred
+     */
 
     static void write(final Iterator<Cell> cells, final File to) throws IOException {
         try (FileChannel fc = FileChannel.open(to.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
