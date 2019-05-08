@@ -34,6 +34,7 @@ class TrashTest extends TestBase {
         createTrashFile(data, "trash.dat");
         createTrashFile(data, "trash");
         createTrashFile(data, "trash_0");
+        createTrashFile(data, "trash.db");
 
         // Load and check stored value
         try (DAO dao = DAOFactory.create(data)) {
@@ -56,6 +57,7 @@ class TrashTest extends TestBase {
         createTrashFile(data, "trash.dat", randomValue());
         createTrashFile(data, "trash", randomValue());
         createTrashFile(data, "trash_0", randomValue());
+        createTrashFile(data, "trash.db", randomValue());
 
         // Load and check stored value
         try (DAO dao = DAOFactory.create(data)) {
@@ -71,9 +73,11 @@ class TrashTest extends TestBase {
     private static void createTrashFile(final File dir,
                                         final String name,
                                         final ByteBuffer content) throws IOException {
-        try (final FileChannel ch = FileChannel.open(
-                Paths.get(dir.getAbsolutePath(), name),
-                StandardOpenOption.CREATE)) {
+        try (final FileChannel ch =
+                     FileChannel.open(
+                             Paths.get(dir.getAbsolutePath(), name),
+                             StandardOpenOption.CREATE,
+                             StandardOpenOption.WRITE)) {
             ch.write(content);
         }
     }

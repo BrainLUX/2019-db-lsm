@@ -49,7 +49,7 @@ public final class SSTable implements Table {
     }
 
     /**
-     * Writes MemTable data to disk
+     * Writes MemTable data to disk.
      *
      * @param cells iterator of MemTable
      * @param to    path of the file where data needs to be written
