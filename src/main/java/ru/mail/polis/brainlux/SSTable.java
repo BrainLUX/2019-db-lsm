@@ -24,7 +24,6 @@ public final class SSTable implements Table {
         assert sizeInBytes != 0 && sizeInBytes <= Integer.MAX_VALUE;
         final ByteBuffer mapped;
         try (FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
-            assert sizeInBytes <= Integer.MAX_VALUE;
             mapped = fc.map(FileChannel.MapMode.READ_ONLY, 0L, fc.size()).order(ByteOrder.BIG_ENDIAN);
         }
 
