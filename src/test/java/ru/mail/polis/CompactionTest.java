@@ -16,17 +16,21 @@
 
 package ru.mail.polis;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Compaction tests for {@link DAO} implementations
@@ -128,5 +132,76 @@ class CompactionTest extends TestBase {
 
         // Heuristic
         assertTrue(size < valueSize);
+    }
+
+    @Test
+    void single(@TempDir File data) throws IOException {
+        // Reference value
+        final int valueSize = 1024 * 1024;
+
+        final ByteBuffer key = randomKey();
+        final ByteBuffer value = randomBuffer(valueSize);
+
+        // Insert single key, assume only one SSTable will be flushed ;)
+        try (DAO dao = DAOFactory.create(data)) {
+            dao.upsert(key, value);
+        }
+
+        final long initialSize = Files.directorySize(data);
+
+        // Compact
+        try (DAO dao = DAOFactory.create(data)) {
+            dao.compact();
+        }
+
+        // Check the contents
+        try (DAO dao = DAOFactory.create(data)) {
+            assertEquals(value, dao.get(key));
+        }
+
+        // Check store size
+        final long compactedSize = Files.directorySize(data);
+
+        // No removals/updates => no real compaction
+        assertEquals(initialSize, compactedSize);
+    }
+
+    @Test
+    void fileCollision(@TempDir File data) throws IOException {
+        // Reference value
+        final int keyCount = 10;
+        // How many times data will be flushed
+        final int portionsCount = 100;
+        // On which step compaction will be performed
+        final int compactIteration = 2;
+        // Last value for each dumped key
+        final Map<ByteBuffer, ByteBuffer> entries =
+                new HashMap<>(keyCount * portionsCount);
+
+        for (int i = 0; i < portionsCount; i++) {
+            Map<ByteBuffer, ByteBuffer> dump = new HashMap<>(keyCount);
+            for (int j = 0; j < keyCount; j++) {
+                dump.put(TestBase.randomKey(), TestBase.randomValue());
+            }
+            try (DAO dao = DAOFactory.create(data)) {
+                for (final Map.Entry<ByteBuffer, ByteBuffer> entry : dump.entrySet()) {
+                    dao.upsert(entry.getKey(), entry.getValue());
+                }
+            }
+            entries.putAll(dump);
+            if (i == compactIteration) {
+                // Compact
+                try (DAO dao = DAOFactory.create(data)) {
+                    dao.compact();
+                }
+            }
+        }
+
+        // Check the contents
+        try (DAO dao = DAOFactory.create(data)) {
+            for (final Map.Entry<ByteBuffer, ByteBuffer> entry : entries.entrySet()) {
+                assertEquals(entry.getValue(), dao.get(entry.getKey()));
+            }
+        }
     }
 }
