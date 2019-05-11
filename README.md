@@ -44,6 +44,12 @@ $ gradle test
 
 Как и раньше необходимо обеспечить прохождение тестов `PersistenceTest`, а также приветствуется добавление новых тестов отдельным pull request'ом.
 
+### Этап 3. Compaction (deadline 2019-05-15)
+
+На данном этапе необходимо реализовать (блокирующий) метод `DAO.compact()`, который должен устранять устаревшие версии ячеек на диске, чтобы не занимать лишнее место.
+
+Необходимо обеспечить прохождение тестов `CompactionTest`.
+
 Референсные реализации:
 * [LSM](https://en.wikipedia.org/wiki/Log-structured_merge-tree)
 * [Cassandra](https://docs.datastax.com/en/cassandra/3.0/cassandra/dml/dmlHowDataWritten.html#dmlHowDataWritten__storing-data-on-disk-in-sstables)
