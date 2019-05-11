@@ -18,9 +18,11 @@ public final class SSTable implements Table {
     private final IntBuffer offsets;
     private final ByteBuffer cells;
     private final long sizeInBytes;
+    private final File base;
 
     SSTable(final File file) throws IOException {
         this.sizeInBytes = file.length();
+        this.base = file;
         assert sizeInBytes != 0 && sizeInBytes <= Integer.MAX_VALUE;
         final ByteBuffer mapped;
         try (FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
@@ -187,6 +189,10 @@ public final class SSTable implements Table {
     @Override
     public void remove(@NotNull final ByteBuffer key) {
         throw new UnsupportedOperationException("");
+    }
+
+    File getTable() {
+        return base;
     }
 
 }

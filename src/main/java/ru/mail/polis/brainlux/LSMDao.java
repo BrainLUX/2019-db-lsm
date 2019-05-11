@@ -65,7 +65,14 @@ public final class LSMDao implements DAO {
 
     @NotNull
     @Override
-    public Iterator<Record> iterator(@NotNull final ByteBuffer from) throws IOException {
+    public Iterator<Record> iterator(@NotNull ByteBuffer from) throws IOException {
+        return Iterators.transform(
+                cellIterator(from),
+                cell -> Record.of(cell.getKey(), cell.getValue().getData()));
+    }
+
+    @NotNull
+    private Iterator<Cell> cellIterator(@NotNull final ByteBuffer from) throws IOException {
         final Collection<Iterator<Cell>> filesIterators = new ArrayList<>();
 
         //SSTables iterators
@@ -81,22 +88,20 @@ public final class LSMDao implements DAO {
                 Iterators.filter(
                         cells,
                         cell -> !cell.getValue().isRemoved());
-        return Iterators.transform(
-                alive,
-                cell -> Record.of(cell.getKey(), cell.getValue().getData()));
+        return alive;
     }
 
     @Override
     public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) throws IOException {
         memTable.upsert(key, value);
         if (memTable.sizeInBytes() >= flushThreshold) {
-            flush();
+            flush(memTable.iterator(EMPTY));
         }
     }
 
-    private void flush() throws IOException {
+    private void flush(Iterator iterator) throws IOException {
         final File tmp = new File(base, PREFIX + generation + TEMP);
-        SSTable.write(memTable.iterator(EMPTY), tmp);
+        SSTable.write(iterator, tmp);
         final File dest = new File(base, PREFIX + generation + SUFFIX);
         Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
         generation++;
@@ -107,13 +112,25 @@ public final class LSMDao implements DAO {
     public void remove(@NotNull final ByteBuffer key) throws IOException {
         memTable.remove(key);
         if (memTable.sizeInBytes() >= flushThreshold) {
-            flush();
+            flush(memTable.iterator(EMPTY));
         }
     }
 
     @Override
     public void close() throws IOException {
-        flush();
+        flush(memTable.iterator(EMPTY));
+    }
+
+    @Override
+    public void compact() throws IOException {
+        flush(cellIterator(EMPTY));
+        ssTables.forEach(ssTable -> {
+            try {
+                Files.delete(ssTable.getTable().toPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
 }
