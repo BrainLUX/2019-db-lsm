@@ -65,7 +65,7 @@ public final class LSMDao implements DAO {
 
     @NotNull
     @Override
-    public Iterator<Record> iterator(@NotNull ByteBuffer from) throws IOException {
+    public Iterator<Record> iterator(@NotNull final ByteBuffer from) throws IOException {
         return Iterators.transform(
                 cellIterator(from),
                 cell -> Record.of(cell.getKey(), cell.getValue().getData()));
@@ -99,7 +99,7 @@ public final class LSMDao implements DAO {
         }
     }
 
-    private void flush(Iterator iterator) throws IOException {
+    private void flush(@NotNull final Iterator iterator) throws IOException {
         final File tmp = new File(base, PREFIX + generation + TEMP);
         SSTable.write(iterator, tmp);
         final File dest = new File(base, PREFIX + generation + SUFFIX);
