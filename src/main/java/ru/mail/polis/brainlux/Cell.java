@@ -28,5 +28,5 @@ public final class Cell {
     private int getGeneration() {
         return generation;
     }
-    
+
 }

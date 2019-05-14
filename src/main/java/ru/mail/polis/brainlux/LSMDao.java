@@ -27,13 +27,13 @@ public final class LSMDao implements DAO {
     private static final String TEMP = ".tmp";
     private static final String PREFIX = "SSTABLE";
     private static final ByteBuffer EMPTY = ByteBuffer.allocate(0);
+    private static final int TABLESCOUNT = 16;
 
     private final long flushThreshold;
     private final File base;
     private final Collection<SSTable> ssTables;
     private Table memTable;
     private int generation;
-    private final int TABLES_MAXCOUNT = 16;
 
     /**
      * Creates persistence LSMDao.
@@ -67,8 +67,8 @@ public final class LSMDao implements DAO {
     }
 
     private int getGeneration(@NotNull final String path) {
-        StringBuilder digit = new StringBuilder();
-        for (char c : path.toCharArray()) {
+        final StringBuilder digit = new StringBuilder();
+        for (final char c : path.toCharArray()) {
             if (Character.isDigit(c)) {
                 digit.append(c);
             } else {
@@ -114,7 +114,7 @@ public final class LSMDao implements DAO {
         if (memTable.sizeInBytes() >= flushThreshold) {
             flush(memTable.iterator(EMPTY));
         }
-        if (ssTables.size() > TABLES_MAXCOUNT) {
+        if (ssTables.size() > TABLESCOUNT) {
             compact();
         }
     }
@@ -134,7 +134,7 @@ public final class LSMDao implements DAO {
         if (memTable.sizeInBytes() >= flushThreshold) {
             flush(memTable.iterator(EMPTY));
         }
-        if (ssTables.size() > TABLES_MAXCOUNT) {
+        if (ssTables.size() > TABLESCOUNT) {
             compact();
         }
     }
