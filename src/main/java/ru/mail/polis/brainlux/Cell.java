@@ -5,14 +5,16 @@ import java.util.Comparator;
 
 public final class Cell {
     static final Comparator<Cell> COMPARATOR =
-            Comparator.comparing(Cell::getKey).thenComparing(Cell::getValue);
+            Comparator.comparing(Cell::getKey).thenComparing(Cell::getValue).thenComparing(Cell::getGeneration);
 
     private final ByteBuffer key;
     private final Value value;
+    private final int generation;
 
-    Cell(final ByteBuffer key, final Value value) {
+    Cell(final ByteBuffer key, final Value value, final int generation) {
         this.key = key;
         this.value = value;
+        this.generation = generation;
     }
 
     public ByteBuffer getKey() {
@@ -23,4 +25,8 @@ public final class Cell {
         return value;
     }
 
+    private int getGeneration() {
+        return generation;
+    }
+    
 }

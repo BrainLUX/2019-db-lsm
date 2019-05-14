@@ -33,6 +33,7 @@ public final class LSMDao implements DAO {
     private final Collection<SSTable> ssTables;
     private Table memTable;
     private int generation;
+    private final int TABLES_MAXCOUNT = 16;
 
     /**
      * Creates persistence LSMDao.
@@ -48,19 +49,35 @@ public final class LSMDao implements DAO {
         this.base = base;
         assert flushThreshold >= 0L;
         this.flushThreshold = flushThreshold;
-        memTable = new MemTable();
+        memTable = new MemTable(generation);
         ssTables = new ArrayList<>();
         Files.walkFileTree(base.toPath(), EnumSet.of(FileVisitOption.FOLLOW_LINKS), 1, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(final Path path, final BasicFileAttributes attrs) throws IOException {
                 if (path.getFileName().toString().endsWith(SUFFIX)
                         && path.getFileName().toString().startsWith(PREFIX)) {
-                    ssTables.add(new SSTable(path.toFile()));
+                    ssTables.add(new SSTable(path.toFile(), generation));
+                    generation = Integer.max(generation, getGeneration(new StringBuffer(path.toString())
+                            .reverse().toString()));
                 }
                 return FileVisitResult.CONTINUE;
             }
         });
-        generation = ssTables.size() - 1;
+        generation++;
+    }
+
+    private int getGeneration(@NotNull final String path) {
+        StringBuilder digit = new StringBuilder();
+        for (char c : path.toCharArray()) {
+            if (Character.isDigit(c)) {
+                digit.append(c);
+            } else {
+                if (digit.length() > 0) {
+                    return Integer.parseInt(digit.reverse().toString());
+                }
+            }
+        }
+        return 0;
     }
 
     @NotNull
@@ -97,6 +114,9 @@ public final class LSMDao implements DAO {
         if (memTable.sizeInBytes() >= flushThreshold) {
             flush(memTable.iterator(EMPTY));
         }
+        if (ssTables.size() > TABLES_MAXCOUNT) {
+            compact();
+        }
     }
 
     private void flush(@NotNull final Iterator iterator) throws IOException {
@@ -105,7 +125,7 @@ public final class LSMDao implements DAO {
         final File dest = new File(base, PREFIX + generation + SUFFIX);
         Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
         generation++;
-        memTable = new MemTable();
+        memTable = new MemTable(generation);
     }
 
     @Override
@@ -114,11 +134,16 @@ public final class LSMDao implements DAO {
         if (memTable.sizeInBytes() >= flushThreshold) {
             flush(memTable.iterator(EMPTY));
         }
+        if (ssTables.size() > TABLES_MAXCOUNT) {
+            compact();
+        }
     }
 
     @Override
     public void close() throws IOException {
-        flush(memTable.iterator(EMPTY));
+        if (memTable.sizeInBytes() > 0) {
+            flush(memTable.iterator(EMPTY));
+        }
     }
 
     @Override
@@ -131,6 +156,10 @@ public final class LSMDao implements DAO {
                 e.printStackTrace();
             }
         });
+        ssTables.clear();
+        ssTables.add(new SSTable(new File(base, PREFIX + --generation + SUFFIX), generation));
+        generation++;
+        memTable = new MemTable(generation);
     }
 
 }
