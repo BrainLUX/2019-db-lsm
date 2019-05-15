@@ -157,12 +157,11 @@ public final class LSMDao implements DAO {
             try {
                 Files.delete(ssTable.getTable().toPath());
             } catch (IOException e) {
-                log.error("Can't delete ssTable");
+                log.error("Can't delete ssTable", e);
             }
         });
         ssTables.clear();
         ssTables.add(new SSTable(new File(path)));
-        generation++;
         memTable = new MemTable();
     }
 
