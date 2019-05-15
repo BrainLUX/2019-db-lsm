@@ -19,12 +19,10 @@ public final class SSTable implements Table {
     private final ByteBuffer cells;
     private final long sizeInBytes;
     private final File base;
-    private final int generation;
 
-    SSTable(final File file, final int generation) throws IOException {
+    SSTable(final File file) throws IOException {
         this.sizeInBytes = file.length();
         this.base = file;
-        this.generation = generation;
         assert sizeInBytes != 0 && sizeInBytes <= Integer.MAX_VALUE;
         final ByteBuffer mapped;
         try (FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
@@ -134,7 +132,7 @@ public final class SSTable implements Table {
         final long timestamp = cells.getLong(offset);
         offset += Long.BYTES;
         if (timestamp < 0) {
-            return new Cell(key.slice(), new Value(-timestamp, null), generation);
+            return new Cell(key.slice(), new Value(-timestamp, null));
         } else {
             final int valueSize = cells.getInt(offset);
             offset += Integer.BYTES;
@@ -143,7 +141,7 @@ public final class SSTable implements Table {
             value.limit(value.position() + valueSize)
                     .position(offset)
                     .limit(offset + valueSize);
-            return new Cell(key.slice(), new Value(timestamp, value.slice()), generation);
+            return new Cell(key.slice(), new Value(timestamp, value.slice()));
         }
     }
 

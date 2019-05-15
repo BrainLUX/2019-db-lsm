@@ -11,11 +11,6 @@ import java.util.TreeMap;
 public final class MemTable implements Table {
     private final SortedMap<ByteBuffer, Value> map = new TreeMap<>();
     private long sizeInBytes;
-    private final int generation;
-
-    MemTable(final int generation) {
-        this.generation = generation;
-    }
 
     public long sizeInBytes() {
         return sizeInBytes;
@@ -26,7 +21,7 @@ public final class MemTable implements Table {
     public Iterator<Cell> iterator(@NotNull final ByteBuffer from) {
         return Iterators.transform(
                 map.tailMap(from).entrySet().iterator(),
-                e -> new Cell(e.getKey(), e.getValue(), generation));
+                e -> new Cell(e.getKey(), e.getValue()));
     }
 
     @Override

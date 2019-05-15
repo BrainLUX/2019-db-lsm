@@ -18,6 +18,8 @@ import java.util.Iterator;
 import com.google.common.collect.Iterators;
 import org.jetbrains.annotations.NotNull;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.mail.polis.DAO;
 import ru.mail.polis.Iters;
 import ru.mail.polis.Record;
@@ -32,6 +34,7 @@ public final class LSMDao implements DAO {
     private final long flushThreshold;
     private final File base;
     private final Collection<SSTable> ssTables;
+    private final Logger log = LoggerFactory.getLogger(LSMDao.class);
     private Table memTable;
     private int generation;
 
@@ -49,14 +52,14 @@ public final class LSMDao implements DAO {
         this.base = base;
         assert flushThreshold >= 0L;
         this.flushThreshold = flushThreshold;
-        memTable = new MemTable(generation);
+        memTable = new MemTable();
         ssTables = new ArrayList<>();
         Files.walkFileTree(base.toPath(), EnumSet.of(FileVisitOption.FOLLOW_LINKS), 1, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(final Path path, final BasicFileAttributes attrs) throws IOException {
                 if (path.getFileName().toString().endsWith(SUFFIX)
                         && path.getFileName().toString().startsWith(PREFIX)) {
-                    ssTables.add(new SSTable(path.toFile(), generation));
+                    ssTables.add(new SSTable(path.toFile()));
                     generation = Integer.max(generation, getGeneration(new StringBuffer(path.toString())
                             .reverse().toString()));
                 }
@@ -119,13 +122,14 @@ public final class LSMDao implements DAO {
         }
     }
 
-    private void flush(@NotNull final Iterator iterator) throws IOException {
+    private String flush(@NotNull final Iterator iterator) throws IOException {
         final File tmp = new File(base, PREFIX + generation + TEMP);
         SSTable.write(iterator, tmp);
         final File dest = new File(base, PREFIX + generation + SUFFIX);
         Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
         generation++;
-        memTable = new MemTable(generation);
+        memTable = new MemTable();
+        return dest.toPath().toString();
     }
 
     @Override
@@ -148,18 +152,18 @@ public final class LSMDao implements DAO {
 
     @Override
     public void compact() throws IOException {
-        flush(cellIterator(EMPTY));
+        final String path = flush(cellIterator(EMPTY));
         ssTables.forEach(ssTable -> {
             try {
                 Files.delete(ssTable.getTable().toPath());
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Can't delete ssTable");
             }
         });
         ssTables.clear();
-        ssTables.add(new SSTable(new File(base, PREFIX + --generation + SUFFIX), generation));
+        ssTables.add(new SSTable(new File(path)));
         generation++;
-        memTable = new MemTable(generation);
+        memTable = new MemTable();
     }
 
 }
